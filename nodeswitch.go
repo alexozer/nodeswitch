@@ -13,10 +13,7 @@ import (
 const numFifos = 3
 const doneCmd = "done"
 
-var (
-	fifoDir   = os.TempDir() + "/nodeswitch"
-	stateJson = fifoDir + "/state.json"
-)
+var fifoDir, stateJson string
 
 func main() {
 	if len(os.Args) < 2 {
@@ -26,18 +23,19 @@ func main() {
 
 	var err error
 
+	if fifoDir, err = os.Getwd(); err != nil {
+		log.Fatal(err)
+	}
+	stateJson = fifoDir + "/.nodeswitch-state.json"
+
 	var state *State
-	if exists, err := exists(fifoDir); !exists {
+	if exists, err := exists(stateJson); !exists {
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		if os.Args[1] == doneCmd {
 			return
-		}
-
-		if err = os.Mkdir(fifoDir, 0755); err != nil {
-			log.Fatal(err)
 		}
 
 		state, err = initNodes()
@@ -146,7 +144,7 @@ func MakeFifo(fid int) error {
 }
 
 func fifoPath(fid int) string {
-	return fmt.Sprintf("%s/fifo%d", fifoDir, fid)
+	return fmt.Sprintf("%s/.nodeswitch-fifo%d", fifoDir, fid)
 }
 
 func (this *State) StartApp(path string) error {
@@ -207,14 +205,18 @@ func (this *State) Write(path string) error {
 }
 
 func cleanup(state *State) error {
-	for _, pid := range state.Nodes {
+	for i, pid := range state.Nodes {
 		proc, err := os.FindProcess(pid)
 		if err == nil {
 			proc.Signal(os.Interrupt)
 		}
+
+		if err = os.Remove(fifoPath(i)); err != nil {
+			return err
+		}
 	}
 
-	return os.RemoveAll(fifoDir)
+	return nil
 }
 
 func exists(path string) (bool, error) {
