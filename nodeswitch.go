@@ -10,7 +10,7 @@ import (
 	"syscall"
 )
 
-const numFifos = 5
+const numFifos = 3
 const doneCmd = "done"
 
 var (
