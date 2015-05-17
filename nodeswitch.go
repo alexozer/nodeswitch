@@ -216,6 +216,10 @@ func cleanup(state *State) error {
 		}
 	}
 
+	if err := os.Remove(stateJson); err != nil {
+		return err
+	}
+
 	return nil
 }
 
