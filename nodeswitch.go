@@ -47,10 +47,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		if state.Running {
-			log.Fatal("nodeswitch is already running.")
-		}
 	}
 
 	if os.Args[1] == doneCmd {
@@ -60,11 +56,6 @@ func main() {
 		}
 
 		return
-	}
-
-	state.Running = true
-	if err = state.Write(stateJson); err != nil {
-		log.Fatal(err)
 	}
 
 	// check if the last node process is still running, and if so, kill it
@@ -81,7 +72,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	state.Running = false
 	if err := state.Write(stateJson); err != nil {
 		log.Fatal(err)
 	}
@@ -163,7 +153,6 @@ func (this *State) StartApp(path string) error {
 }
 
 type State struct {
-	Running  bool
 	CurrNode int
 	Nodes    []int
 }
